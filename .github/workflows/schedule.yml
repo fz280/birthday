@@ -11,8 +11,8 @@ jobs:
     steps:
       - name: 执行任务
         env:
-          MY_TOKEN: ${{ secrets.my_token }}
-          TEST_TOKEN: ${{ secrets.test_token }}
+          MY_TOKEN: ${{ secrets.my_token }}        # 你的 Token（调用 API）
+          FRIEND_TO: ${{ secrets.test_token }}     # 好友的标识（to 参数）
         run: |
           echo "任务开始时间：$(date)"
           
@@ -20,45 +20,39 @@ jobs:
           echo "正在验证 Secrets 配置..."
           
           if [ -n "$MY_TOKEN" ]; then
-            echo "✓ my_token 已设置"
+            echo "✓ my_token 已设置（用于 API 调用）"
           else
-            echo "✗ my_token 未设置"
-          fi
-          
-          if [ -n "$TEST_TOKEN" ]; then
-            echo "✓ test_token 已设置"
-          else
-            echo "✗ test_token 未设置"
-          fi
-          
-          # 如果两个 Token 都为空，则退出
-          if [ -z "$MY_TOKEN" ] && [ -z "$TEST_TOKEN" ]; then
-            echo "错误：没有任何 Token 被设置，请检查 GitHub Secrets 配置"
+            echo "✗ my_token 未设置，无法发送消息"
             exit 1
           fi
           
-          # 发送测试消息（优先使用 MY_TOKEN）
-          echo "正在发送测试消息..."
+          if [ -n "$FRIEND_TO" ]; then
+            echo "✓ 好友标识已设置，将发送给好友"
+            TO_PARAM="\"to\": \"$FRIEND_TO\","
+          else
+            echo "⚠️ 好友标识未设置，将发送给自己"
+            TO_PARAM=""
+          fi
           
-          TOKEN_TO_USE="${MY_TOKEN:-$TEST_TOKEN}"
+          # 发送消息
+          echo "正在发送消息..."
           
-          # 调用 PushPlus API
           RESPONSE=$(curl -s -X POST "https://www.pushplus.plus/api/send" \
             -H "Content-Type: application/json" \
             -d "{
-              \"token\": \"$TOKEN_TO_USE\",
-              \"title\": \"GitHub Actions 测试通知\",
-              \"content\": \"✅ 定时任务运行成功！\\n\\n任务执行时间：$(date)\\nSecrets 状态：my_token=$([ -n "$MY_TOKEN" ] && echo '已设置' || echo '未设置'), test_token=$([ -n "$TEST_TOKEN" ] && echo '已设置' || echo '未设置')\",
+              \"token\": \"$MY_TOKEN\",
+              $TO_PARAM
+              \"title\": \"每日提醒\",
+              \"content\": \"$(date) 定时任务运行成功！\",
               \"template\": \"txt\"
             }")
           
           echo "API 响应：$RESPONSE"
           
-          # 检查发送结果
           if echo "$RESPONSE" | grep -q '"code":200'; then
             echo "✓ 消息发送成功！"
           else
-            echo "✗ 消息发送失败，请检查 Token 是否正确"
+            echo "✗ 消息发送失败"
             exit 1
           fi
           
