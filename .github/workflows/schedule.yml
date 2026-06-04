@@ -1,0 +1,17 @@
+name: 定时任务
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 执行任务
+        run: |
+          echo "任务开始时间：$(date)"
+          # 在这里写你要执行的命令
+          # 例如访问一个网址：curl https://example.com/api
+          echo "任务完成"
