@@ -1,59 +1,27 @@
-name: 定时任务
+name: 测试 Secrets
 
-on:
-  schedule:
-    - cron: '0 2 * * *'
-  workflow_dispatch:
+on: workflow_dispatch
 
 jobs:
-  run:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: 执行任务
+      - name: 测试环境变量
         env:
-          MY_TOKEN: ${{ secrets.my_token }}        # 你的 Token（调用 API）
-          FRIEND_TO: ${{ secrets.test_token }}     # 好友的标识（to 参数）
+          MY_TOKEN: ${{ secrets.my_token }}
+          FRIEND_TO: ${{ secrets.test_token }}
         run: |
-          echo "任务开始时间：$(date)"
-          
-          # 验证 Secrets 是否正确设置
-          echo "正在验证 Secrets 配置..."
+          echo "MY_TOKEN 长度: ${#MY_TOKEN}"
+          echo "FRIEND_TO 长度: ${#FRIEND_TO}"
           
           if [ -n "$MY_TOKEN" ]; then
-            echo "✓ my_token 已设置（用于 API 调用）"
+            echo "✓ MY_TOKEN 有值"
           else
-            echo "✗ my_token 未设置，无法发送消息"
-            exit 1
+            echo "✗ MY_TOKEN 为空"
           fi
           
           if [ -n "$FRIEND_TO" ]; then
-            echo "✓ 好友标识已设置，将发送给好友"
-            TO_PARAM="\"to\": \"$FRIEND_TO\","
+            echo "✓ FRIEND_TO 有值"
           else
-            echo "⚠️ 好友标识未设置，将发送给自己"
-            TO_PARAM=""
+            echo "✗ FRIEND_TO 为空"
           fi
-          
-          # 发送消息
-          echo "正在发送消息..."
-          
-          RESPONSE=$(curl -s -X POST "https://www.pushplus.plus/api/send" \
-            -H "Content-Type: application/json" \
-            -d "{
-              \"token\": \"$MY_TOKEN\",
-              $TO_PARAM
-              \"title\": \"每日提醒\",
-              \"content\": \"$(date) 定时任务运行成功！\",
-              \"template\": \"txt\"
-            }")
-          
-          echo "API 响应：$RESPONSE"
-          
-          if echo "$RESPONSE" | grep -q '"code":200'; then
-            echo "✓ 消息发送成功！"
-          else
-            echo "✗ 消息发送失败"
-            exit 1
-          fi
-          
-          echo "任务完成时间：$(date)"
