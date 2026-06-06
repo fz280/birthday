@@ -2,7 +2,7 @@ name: 定时任务
 
 on:
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '0 23 * * *'
   workflow_dispatch:
 
 jobs:
@@ -14,7 +14,10 @@ jobs:
           MY_TOKEN: ${{ secrets.my_token }}
           TEST_TOKEN: ${{ secrets.test_token }}
         run: |
-          echo "任务开始时间：$(date)"
+          echo "=========================================="
+          echo "任务开始时间（UTC）：$(date -u)"
+          echo "任务开始时间（北京时间）：$(TZ='Asia/Shanghai' date)"
+          echo "=========================================="
           
           if [ -n "$MY_TOKEN" ]; then
             echo "✓ MY_TOKEN 已设置"
@@ -33,13 +36,16 @@ jobs:
           
           echo "正在发送消息..."
           
+          # 获取北京时间作为消息内容
+          BEIJING_TIME=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')
+          
           RESPONSE=$(curl -s -X POST "https://www.pushplus.plus/api/send" \
             -H "Content-Type: application/json" \
             -d "{
               \"token\": \"$MY_TOKEN\",
               $TO_PARAM
               \"title\": \"每日提醒\",
-              \"content\": \"$(date) 定时任务运行成功！\",
+              \"content\": \"执行时间（北京时间）：${BEIJING_TIME}\\n定时任务运行成功！\",
               \"template\": \"txt\"
             }")
           
@@ -52,4 +58,7 @@ jobs:
             exit 1
           fi
           
-          echo "任务完成时间：$(date)"
+          echo "=========================================="
+          echo "任务完成时间（UTC）：$(date -u)"
+          echo "任务完成时间（北京时间）：$(TZ='Asia/Shanghai' date)"
+          echo "=========================================="
