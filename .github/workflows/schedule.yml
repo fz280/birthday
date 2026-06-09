@@ -22,4 +22,4 @@ jobs:
           MY_TOKEN: ${{ secrets.my_token }}
           TEST_TOKEN: ${{ secrets.test_token }}
         run: |
-          python test.py
+          python birthday.py
