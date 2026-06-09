@@ -6,8 +6,6 @@ from datetime import datetime, timedelta
 import requests
 import json
 
-
-
 from lunarcalendar import Converter, Solar, Lunar
 
 # 生日数据
@@ -43,7 +41,7 @@ lunar_data = [
     {"name": "张乐", "month": 10, "day": 30, "is_lunar": False},
     {"name": "泽明", "month": 1, "day": 12, "is_lunar": False},
     {"name": "可婷", "month": 12, "day": 20, "is_lunar": True},
-    {"name": "黄儒", "month": 4, "day": 27, "is_lunar": False},
+    {"name": "黄儒", "month": 4, "day": 27, "is_lunar": True},
     {"name": "景如", "month": 1, "day": 15, "is_lunar": False},
     {"name": "可媖", "month": 8, "day": 6, "is_lunar": False},
     {"name": "弋欣", "month": 1, "day": 29, "is_lunar": False},
@@ -83,8 +81,6 @@ def get_birthday_date(birthday, year):
 def check_upcoming_birthdays():
     """检查今天和明天的生日"""
     # 获取当前北京时间
-    beijing_tz = datetime.now().astimezone()
-    # 手动设置时区偏移
     utc_now = datetime.utcnow()
     beijing_now = utc_now + timedelta(hours=8)
     today = beijing_now.date()
@@ -104,28 +100,28 @@ def check_upcoming_birthdays():
             solar_date = get_birthday_date(birthday, year)
             check_date = solar_date.to_date()
             
-            # 确定生日备注
+            # 确定日期显示格式
             if birthday["is_lunar"]:
-                note = f"（农历{birthday['month']}月{birthday['day']}日）"
+                date_str = f"农历{birthday['month']}月{birthday['day']}日"
             else:
-                note = ""
+                date_str = f"{birthday['month']}月{birthday['day']}日"
             
             if check_date == today:
                 today_birthdays.append({
                     "name": birthday["name"],
-                    "note": note,
-                    "date": check_date
+                    "date_str": date_str,
+                    "is_lunar": birthday["is_lunar"]
                 })
             elif check_date == tomorrow:
                 tomorrow_birthdays.append({
                     "name": birthday["name"],
-                    "note": note,
-                    "date": check_date
+                    "date_str": date_str,
+                    "is_lunar": birthday["is_lunar"]
                 })
     
     return today_birthdays, tomorrow_birthdays
 
-def send_pushplus_message(content):
+def send_pushplus_message(title, content):
     """发送 PushPlus 消息"""
     my_token = os.environ.get('MY_TOKEN')
     test_token = os.environ.get('TEST_TOKEN')
@@ -136,14 +132,14 @@ def send_pushplus_message(content):
     
     data = {
         "token": my_token,
-        "title": "生日提醒",
+        "title": title,
         "content": content,
         "template": "txt"
     }
     
     if test_token:
         data["to"] = test_token
-        print(f"将发送给好友（TEST_TOKEN: {test_token[:5]}...）")
+        print(f"将发送给好友")
     
     try:
         response = requests.post("https://www.pushplus.plus/api/send", json=data, timeout=10)
@@ -171,16 +167,30 @@ def main():
     # 构建消息内容
     message_lines = []
     
+    # 生成标题
+    title_parts = []
+    if today_birthdays:
+        names = [b["name"] for b in today_birthdays]
+        title_parts.append(f"今日生日：{', '.join(names)}")
+    if tomorrow_birthdays:
+        names = [b["name"] for b in tomorrow_birthdays]
+        title_parts.append(f"明日生日：{', '.join(names)}")
+    
+    if title_parts:
+        title = "🎂 " + " | ".join(title_parts)
+    else:
+        title = "📅 生日提醒"
+    
     if today_birthdays:
         message_lines.append("🎂 【今日生日】 🎂")
         for b in today_birthdays:
-            message_lines.append(f"  {b['name']}{b['note']}")
+            message_lines.append(f"  {b['name']} · {b['date_str']}")
         message_lines.append("")
     
     if tomorrow_birthdays:
-        message_lines.append("🎁 【明日生日】 🎁（提前提醒）")
+        message_lines.append("🎁 【明日生日】 🎁")
         for b in tomorrow_birthdays:
-            message_lines.append(f"  {b['name']}{b['note']}")
+            message_lines.append(f"  {b['name']} · {b['date_str']}")
         message_lines.append("")
     
     if not today_birthdays and not tomorrow_birthdays:
@@ -188,18 +198,21 @@ def main():
         print("没有生日需要提醒")
     else:
         print("找到以下生日：")
-        print("\n".join(message_lines))
+        for line in message_lines:
+            print(line)
     
     message_lines.append("")
     message_lines.append("---")
-    message_lines.append(f"发送时间：{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} (UTC)")
+    beijing_now = datetime.utcnow() + timedelta(hours=8)
+    message_lines.append(f"⏰ 提醒时间：{beijing_now.strftime('%Y-%m-%d %H:%M:%S')}")
     
     content = "\n".join(message_lines)
     
-    # 发送消息（只在有生日时发送）
+    # 发送消息
     if today_birthdays or tomorrow_birthdays:
         print("\n正在发送提醒消息...")
-        send_pushplus_message(content)
+        print(f"标题：{title}")
+        send_pushplus_message(title, content)
     else:
         print("\n没有生日，跳过发送")
     
