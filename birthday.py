@@ -121,14 +121,18 @@ def check_upcoming_birthdays():
     
     return today_birthdays, tomorrow_birthdays
 
-# 接收人列表（在 GitHub Secrets 中配置对应的 token）
+# 自己的 PushPlus token
+MY_TOKEN = os.environ.get('MY_TOKEN')
+
+# 接收人列表（填写好友的 token，不填就发给自己）
 RECIPIENTS = [
+    None,  # 第一个位置留空，发给自己
     os.environ.get('TEST_TOKEN'),
     # os.environ.get('TEST2_TOKEN'),
     # os.environ.get('TEST3_TOKEN'),
 ]
 
-def send_pushplus_message(token, title, content):
+def send_pushplus_message(token, title, content, to=None):
     """发送 PushPlus 消息"""
     data = {
         "token": token,
@@ -136,6 +140,9 @@ def send_pushplus_message(token, title, content):
         "content": content,
         "template": "txt"
     }
+    
+    if to:
+        data["to"] = to
     
     try:
         response = requests.post("https://www.pushplus.plus/api/send", json=data, timeout=10)
@@ -146,6 +153,10 @@ def send_pushplus_message(token, title, content):
         return False
 
 def main():
+    if not MY_TOKEN:
+        print("错误：MY_TOKEN 未设置")
+        return
+    
     # 检查生日
     today_birthdays, tomorrow_birthdays = check_upcoming_birthdays()
     
@@ -188,9 +199,8 @@ def main():
     content = "\n".join(message_lines)
     
     # 发送给所有人
-    for token in RECIPIENTS:
-        if token:
-            send_pushplus_message(token, title, content)
+    for to in RECIPIENTS:
+        send_pushplus_message(MY_TOKEN, title, content, to)
 
 if __name__ == "__main__":
     main()
