@@ -81,8 +81,7 @@ def get_birthday_date(birthday, year):
 def check_upcoming_birthdays():
     """检查今天和明天的生日"""
     # 获取当前北京时间
-    # utc_now = datetime.utcnow()
-    utc_now = datetime.utcnow().replace(year=2026, month=6, day=12)
+    utc_now = datetime.utcnow()
     beijing_now = utc_now + timedelta(hours=8)
     today = beijing_now.date()
     tomorrow = today + timedelta(days=1)
@@ -127,9 +126,9 @@ MY_TOKEN = os.environ.get('MY_TOKEN')
 
 # 接收人列表（填写好友的 token，不填就发给自己）
 RECIPIENTS = [
-    None,  # 第一个位置留空，发给自己
+    # None,  # 第一个位置留空，发给自己
     os.environ.get('TEST_TOKEN'),
-    # os.environ.get('TEST2_TOKEN'),
+    os.environ.get('TARGET1_TOKEN'),
     # os.environ.get('TEST3_TOKEN'),
 ]
 
