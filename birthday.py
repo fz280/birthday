@@ -81,7 +81,8 @@ def get_birthday_date(birthday, year):
 def check_upcoming_birthdays():
     """检查今天和明天的生日"""
     # 获取当前北京时间
-    utc_now = datetime.utcnow()
+    # utc_now = datetime.utcnow()
+    utc_now = datetime.utcnow().replace(year=2026, month=6, day=12)
     beijing_now = utc_now + timedelta(hours=8)
     today = beijing_now.date()
     tomorrow = today + timedelta(days=1)
