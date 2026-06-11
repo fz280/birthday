@@ -124,8 +124,8 @@ def check_upcoming_birthdays():
 # 接收人列表（在 GitHub Secrets 中配置对应的 token）
 RECIPIENTS = [
     os.environ.get('TEST_TOKEN'),
-    os.environ.get('TEST2_TOKEN'),
-    os.environ.get('TEST3_TOKEN'),
+    # os.environ.get('TEST2_TOKEN'),
+    # os.environ.get('TEST3_TOKEN'),
 ]
 
 def send_pushplus_message(token, title, content):
