@@ -51,7 +51,7 @@ lunar_data = [
 new_data = [
     {"name": "宣召", "month": 3, "day": 10, "is_lunar": False},
     {"name": "厚恩", "month": 4, "day": 25, "is_lunar": False},
-    {"name": "无暇", "month": 4, "day": 28, "is_lunar": False},
+    {"name": "无暇", "month": 4, "day": 28, "is_lunar": True},
     {"name": "超群", "month": 12, "day": 25, "is_lunar": True},
     {"name": "宇希", "month": 10, "day": 3, "is_lunar": False},
     {"name": "文涛", "month": 9, "day": 18, "is_lunar": False},
@@ -121,50 +121,40 @@ def check_upcoming_birthdays():
     
     return today_birthdays, tomorrow_birthdays
 
-def send_pushplus_message(title, content):
+# 接收人列表（在 GitHub Secrets 中配置对应的 token）
+RECIPIENTS = [
+    os.environ.get('TEST_TOKEN'),
+    os.environ.get('TEST2_TOKEN'),
+    os.environ.get('TEST3_TOKEN'),
+]
+
+def send_pushplus_message(token, title, content):
     """发送 PushPlus 消息"""
-    my_token = os.environ.get('MY_TOKEN')
-    test_token = os.environ.get('TEST_TOKEN')
-    
-    if not my_token:
-        print("错误：MY_TOKEN 未设置")
-        return False
-    
     data = {
-        "token": my_token,
+        "token": token,
         "title": title,
         "content": content,
         "template": "txt"
     }
     
-    if test_token:
-        data["to"] = test_token
-        print(f"将发送给好友")
-    
     try:
         response = requests.post("https://www.pushplus.plus/api/send", json=data, timeout=10)
         result = response.json()
-        print(f"API 响应: {result}")
-        
-        if result.get('code') == 200:
-            print("✓ 消息发送成功！")
-            return True
-        else:
-            print(f"✗ 消息发送失败: {result.get('msg')}")
-            return False
+        return result.get('code') == 200
     except Exception as e:
-        print(f"✗ 请求失败: {e}")
+        print(f"发送失败: {e}")
         return False
 
 def main():
-    print("=" * 50)
-    print("生日提醒程序启动")
-    print("=" * 50)
-    
     # 检查生日
     today_birthdays, tomorrow_birthdays = check_upcoming_birthdays()
     
-    # 构建消息内容
+    # 没有生日就退出
+    if not today_birthdays and not tomorrow_birthdays:
+        print("没有生日")
+        return
+    
+    # 构建消息内容（保持原格式）
     message_lines = []
     
     # 生成标题
@@ -176,10 +166,7 @@ def main():
         names = [b["name"] for b in tomorrow_birthdays]
         title_parts.append(f"明日生日：{', '.join(names)}")
     
-    if title_parts:
-        title = "🎂 " + " | ".join(title_parts)
-    else:
-        title = "📅 生日提醒"
+    title = "🎂 " + " | ".join(title_parts)
     
     if today_birthdays:
         message_lines.append("🎂 【今日生日】 🎂")
@@ -193,14 +180,6 @@ def main():
             message_lines.append(f"  {b['name']} · {b['date_str']}")
         message_lines.append("")
     
-    if not today_birthdays and not tomorrow_birthdays:
-        message_lines.append("📅 今天和明天都没有生日")
-        print("没有生日需要提醒")
-    else:
-        print("找到以下生日：")
-        for line in message_lines:
-            print(line)
-    
     message_lines.append("")
     message_lines.append("---")
     beijing_now = datetime.utcnow() + timedelta(hours=8)
@@ -208,17 +187,10 @@ def main():
     
     content = "\n".join(message_lines)
     
-    # 发送消息
-    if today_birthdays or tomorrow_birthdays:
-        print("\n正在发送提醒消息...")
-        print(f"标题：{title}")
-        send_pushplus_message(title, content)
-    else:
-        print("\n没有生日，跳过发送")
-    
-    print("=" * 50)
-    print("程序执行完成")
-    print("=" * 50)
+    # 发送给所有人
+    for token in RECIPIENTS:
+        if token:
+            send_pushplus_message(token, title, content)
 
 if __name__ == "__main__":
     main()
