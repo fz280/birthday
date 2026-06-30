@@ -63,8 +63,7 @@ new_data = [
     {"name": "光锐", "month": 4, "day": 7, "is_lunar": False},
     {"name": "婉婷", "month": 12, "day": 20, "is_lunar": False},
     {"name": "嘉靖", "month": 8, "day": 4, "is_lunar": False},
-    {"name": "test", "month": 6, "day": 9, "is_lunar": False},
-    {"name": "test2", "month": 6, "day": 10, "is_lunar": False},
+    {"name": "测试，7.1号", "month": 7, "day": 1, "is_lunar": False},
 ]
 
 # 合并所有数据
