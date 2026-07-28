@@ -33,7 +33,7 @@ lunar_data = [
     {"name": "邬伊美", "month": 5, "day": 13, "is_lunar": False},
     {"name": "胡王光", "month": 7, "day": 14, "is_lunar": False},
     {"name": "沈玮姐", "month": 6, "day": 21, "is_lunar": True},
-    {"name": "哲昂", "month": 6, "day": 15, "is_lunar": True},
+    {"name": "哲昂", "month": 6, "day": 15, "is_lunar": False},
     {"name": "露仁", "month": 3, "day": 19, "is_lunar": False},
     {"name": "陈欢", "month": 5, "day": 15, "is_lunar": False},
     {"name": "游航", "month": 5, "day": 20, "is_lunar": False},
